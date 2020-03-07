@@ -9,21 +9,30 @@ function submitIssue(e) {
   const description = getInputValue("issueDescription");
   const severity = getInputValue("issueSeverity");
   const assignedTo = getInputValue("issueAssignedTo");
-  const id = Math.floor(Math.random() * 100000000) + "";
-  const status = "Open";
+  if (description == "") {
+    alert("Please Inpute Description Field Correctly.");
+    fetchIssues();
+  } else if (assignedTo == "") {
+    alert("Please Assaign The Problem To Someone.");
+    fetchIssues();
+  } else {
+    const id = Math.floor(Math.random() * 100000000) + "";
+    const status = "Open";
 
-  const issue = { id, description, severity, assignedTo, status };
-  let issues = [];
-  if (localStorage.getItem("issues")) {
-    issues = JSON.parse(localStorage.getItem("issues"));
+    const issue = { id, description, severity, assignedTo, status };
+    let issues = [];
+    if (localStorage.getItem("issues")) {
+      issues = JSON.parse(localStorage.getItem("issues"));
+    }
+    issues.push(issue);
+    localStorage.setItem("issues", JSON.stringify(issues));
+
+    document.getElementById("issueInputForm").reset();
+    // issue no
+    localStorage.setItem("issueNo", ++issueNo);
+    fetchIssues();
+    e.preventDefault();
   }
-  issues.push(issue);
-  localStorage.setItem("issues", JSON.stringify(issues));
-
-  document.getElementById("issueInputForm").reset();
-  localStorage.setItem("issueNo", ++issueNo);
-  fetchIssues();
-  e.preventDefault();
 }
 
 const setStatusClosed = id => {
@@ -44,18 +53,28 @@ const setStatusClosed = id => {
 
 const deleteIssue = id => {
   const issues = JSON.parse(localStorage.getItem("issues"));
+  const currentIssue = issues.find(issues => issues.id === id.toString());
+  if (currentIssue.status == "Closed") {
+    const remainingIssues = issues.filter(issues => issues.id != id);
 
-  const remainingIssues = issues.filter(issues => issues.id != id);
+    localStorage.setItem("issues", JSON.stringify(remainingIssues));
 
-  localStorage.setItem("issues", JSON.stringify(remainingIssues));
+    if (localStorage.getItem("issueNo")) {
+      issueNo = parseInt(localStorage.getItem("issueNo"));
+      localStorage.setItem("issueNo", --issueNo);
+      // localStorage.setItem("issueSolvedNo", --issueSolvedNo);
+    }
+    if (localStorage.getItem("issueSolvedNo")) {
+      issueSolvedNo = parseInt(localStorage.getItem("issueSolvedNo"));
+      localStorage.setItem("issueSolvedNo", --issueSolvedNo);
+      // localStorage.setItem("issueSolvedNo", --issueSolvedNo);
+    }
 
-  if (localStorage.getItem("issueNo")) {
-    issueNo = parseInt(localStorage.getItem("issueNo"));
-    localStorage.setItem("issueNo", --issueNo);
-    localStorage.setItem("issueSolvedNo", --issueSolvedNo);
+    fetchIssues();
+  } else {
+    alert("Issue Is Not Checked OR Closed Yet!");
+    fetchIssues();
   }
-
-  fetchIssues();
 };
 
 // Btn Diasble
@@ -71,13 +90,12 @@ const fetchIssues = () => {
   const issues = JSON.parse(localStorage.getItem("issues"));
   const issuesList = document.getElementById("issuesList");
   issuesList.innerHTML = "";
+  if (issues) {
+    for (var i = 0; i < issues.length && issues.length != null; i++) {
+      const { id, description, severity, assignedTo, status } = issues[i];
 
-  for (var i = 0; i < issues.length && issues.length != null; i++) {
-    const { id, description, severity, assignedTo, status } = issues[i];
-    console.log(status);
-
-    if (status == "Closed") {
-      issuesList.innerHTML += `<div class="well">
+      if (status == "Closed") {
+        issuesList.innerHTML += `<div class="well">
                               <h6>Issue ID: ${id} </h6>
                               <p><span class="label label-info"> ${status} </span></p>
                               <h3> ${description} </h3>
@@ -86,8 +104,8 @@ const fetchIssues = () => {
                               <a href="#" onclick="setStatusClosed(${id})" class="btn btn-warning" id="close${id}" disabled>Close</a>
                               <a href="#" onclick="deleteIssue(${id})" class="btn btn-danger">Delete</a>
                               </div>`;
-    } else {
-      issuesList.innerHTML += `<div class="well">
+      } else {
+        issuesList.innerHTML += `<div class="well">
                               <h6>Issue ID: ${id} </h6>
                               <p><span class="label label-info"> ${status} </span></p>
                               <h3> ${description} </h3>
@@ -96,9 +114,10 @@ const fetchIssues = () => {
                               <a href="#" onclick="setStatusClosed(${id})" class="btn btn-warning" id="close${id}">Close</a>
                               <a href="#" onclick="deleteIssue(${id})" class="btn btn-danger">Delete</a>
                               </div>`;
+      }
     }
+    issueCount();
   }
-  issueCount();
 };
 
 function issueCount() {
@@ -107,4 +126,12 @@ function issueCount() {
     localStorage.getItem("issueNo") - localStorage.getItem("issueSolvedNo");
 }
 
-// <a href="#" onclick="setStatusClosed(${id})" class="btn btn-warning" id="close${id}">Close</a>
+// Issues List
+/*
+ 1. Delete Button Not Working
+ 2. issues.length  null error
+ 3. close button => to strike through 
+ 4.empty form submission
+ 5. issue can be deleted with closing or checking  it
+ 6.not keeping the number solved issue and unsolved issue
+*/
