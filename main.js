@@ -1,3 +1,5 @@
+let IssueCount = 0;
+let IssuSolved = 0;
 document
   .getElementById("issueInputForm")
   .addEventListener("submit", submitIssue);
@@ -19,15 +21,24 @@ function submitIssue(e) {
   localStorage.setItem("issues", JSON.stringify(issues));
 
   document.getElementById("issueInputForm").reset();
+  IssueCount++;
   fetchIssues();
   e.preventDefault();
 }
 
-const closeIssue = id => {
+const setStatusClosed = id => {
   const issues = JSON.parse(localStorage.getItem("issues"));
-  const currentIssue = issues.find(issue => issue.id === id);
+
+  const currentIssue = issues.find(issues => issues.id === id.toString());
+
+  console.log(currentIssue);
+
   currentIssue.status = "Closed";
+  currentIssue.description =
+    "<strike>" + currentIssue.description + "</strike>";
   localStorage.setItem("issues", JSON.stringify(issues));
+  IssuSolved++;
+
   fetchIssues();
 };
 
@@ -58,4 +69,5 @@ const fetchIssues = () => {
                               <a href="#" onclick="deleteIssue(${id})" class="btn btn-danger">Delete</a>
                               </div>`;
   }
+  console.log(IssueCount + " " + IssuSolved);
 };
